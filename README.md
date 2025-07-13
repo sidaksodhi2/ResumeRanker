@@ -18,15 +18,6 @@ Built with **Python**, **Streamlit**, and **Sentence-BERT** for semantic matchin
 
 ---
 
-## 🖥️ Demo
-
-Try the app locally:
-
-```bash
-streamlit run app.py
-```
-
-
 ## 📦 Installation
 
 ### Clone the repository
@@ -35,11 +26,17 @@ streamlit run app.py
 git clone https://github.com/sidaksodhi2/ResumeRanker.git
 cd ResumeRanker
 ```
-##Create a virtual environment (Python 3.10 recommended)
+### Create a virtual environment (Python 3.10 recommended)
 ```bash
 python -m venv resume-env
 resume-env\Scripts\activate      # On Windows
 source resume-env/bin/activate  # On Mac/Linux
 ```
-
-
+### Install dependencies
+```bash
+pip install -r requirements.txt
+```
+### Run the app
+```bash
+streamlit run app.py
+```
