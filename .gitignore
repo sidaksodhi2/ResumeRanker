@@ -1,0 +1,16 @@
+# Ignore Python virtual environment
+resume-env/
+
+# Ignore uploaded/test resumes
+resumes/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore VS Code settings
+.vscode/
+
+# Ignore macOS/Windows junk
+.DS_Store
+Thumbs.db
