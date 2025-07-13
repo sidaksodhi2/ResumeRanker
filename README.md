@@ -24,21 +24,22 @@ Try the app locally:
 
 ```bash
 streamlit run app.py
+```
+
 
 ## 📦 Installation
 
-### Clone the repository:
+### Clone the repository
 
 ```bash
 git clone https://github.com/sidaksodhi2/ResumeRanker.git
 cd ResumeRanker
-
-## 🛠️ Setup Instructions
-
-### 🔹 Create a virtual environment (Python 3.10 recommended)
-
+```
+##Create a virtual environment (Python 3.10 recommended)
 ```bash
 python -m venv resume-env
 resume-env\Scripts\activate      # On Windows
-# source resume-env/bin/activate  # On Mac/Linux
+source resume-env/bin/activate  # On Mac/Linux
+```
+
 
