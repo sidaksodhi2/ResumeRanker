@@ -36,6 +36,10 @@ class ResumeScore:
     timestamp: str
 
 class ResumeParser:
+    SECTION_SYNONYMS = {
+        "experience": r"(experience|work\s+history|employment\s+history|professional\s+experience|career\s+summary)",
+        "education": r"(education|academic\s+background|qualifications|academics|educational\s+background)"
+    }
     def __init__(self):
         try:
             self.nlp=spacy.load("en_core_web_sm")
@@ -83,7 +87,7 @@ class ResumeParser:
         return text.strip()
     
     def extract_skills(self, text: str) -> List[str]:
-        patterns = [r'(?i)(skills|technologies|tools|expertise|proficiencies|technical skills)[:\-\s]*([\w\s,;•\|]+)'
+        patterns = [r'(?i)(skills?|technologies|tools|expertise|proficiencies|technical skills?)[:\-\s]*([\w\s,;•\|]+)'
         ]
         skills=[]
         for pattern in patterns:
@@ -92,11 +96,19 @@ class ResumeParser:
                 skills.extend([s.strip() for s in re.split(r'[;,•|]', match) if s.strip()])
         return list(set(skills))  # Remove duplicates
     
-    def extract_section(self, text: str, header: str) -> str:
-        pattern = rf'(?i){header}.*?(?=\n[A-Z][A-Za-z ]+:|\Z)'
-        match = re.search(pattern, text, re.DOTALL)
-        return match.group(0).strip() if match else ""
+    def extract_section(self, text:str, section_name:str) -> str:
+     if section_name.lower() in self.SECTION_SYNONYMS:
+        section_title_pattern = self.SECTION_SYNONYMS[section_name.lower()]
+     else:
+        section_title_pattern = re.escape(section_name)
 
+     pattern = re.compile(
+        rf"{section_title_pattern}\s*[:\-]?\s*([\s\S]*?)(?=\n\s*[A-Z][A-Za-z\s]{{2,}}:|\Z)",
+        re.IGNORECASE
+    )
+     match = pattern.search(text)
+     return match.group(1).strip() if match else ""
+ 
     def extract_experience(self, text: str) -> str:
         return self.extract_section(text, 'experience')
 
@@ -161,6 +173,11 @@ class ResumeScorer:
             'experience_match_score': 0.1,
             'education_match_score': 0.05
         }
+         # Normalize weights to sum = 1
+        total = sum(self.weights.values())
+        self.weights = {k: v / total for k, v in self.weights.items()}
+
+
     def extract_keywords_from_jd(self, jd: str) -> List[str]:
         return re.findall(r'\b[\w\-\+\.]+\b', jd.lower())
    
