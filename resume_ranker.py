@@ -79,7 +79,7 @@ class ResumeParser:
         
     def clean_text(self,text: str) -> str:
         text=re.sub(r'\s+', ' ', text)  # Remove extra whitespace
-        text=re.sub(r'[^\w\s\-\.,\(\)\[\]]', '', text) # Remove special characters except common punctuation
+        text=re.sub(r'[^\w\s\-\.,\(\)\[\]\+#]', '', text) # Remove special characters except common punctuation
         return text.strip()
     
     def extract_skills(self, text: str) -> List[str]:
