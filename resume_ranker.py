@@ -83,7 +83,7 @@ class ResumeParser:
         
     def clean_text(self,text: str) -> str:
         text=re.sub(r'\s+', ' ', text)  # Remove extra whitespace
-        text=re.sub(r'[^\w\s\-\.,\(\)\[\]\+#]', '', text) # Remove special characters except common punctuation
+        text=re.sub(r'[^\w\s\-\.,\(\)\[\]\+#/]', '', text) # Remove special characters except common punctuation
         return text.strip()
     
     def extract_skills(self, text: str) -> List[str]:
@@ -97,17 +97,17 @@ class ResumeParser:
         return list(set(skills))  # Remove duplicates
     
     def extract_section(self, text:str, section_name:str) -> str:
-     if section_name.lower() in self.SECTION_SYNONYMS:
+      if section_name.lower() in self.SECTION_SYNONYMS:
         section_title_pattern = self.SECTION_SYNONYMS[section_name.lower()]
-     else:
+      else:
         section_title_pattern = re.escape(section_name)
 
-     pattern = re.compile(
+      pattern = re.compile(
         rf"{section_title_pattern}\s*[:\-]?\s*([\s\S]*?)(?=\n\s*[A-Z][A-Za-z\s]{{2,}}:|\Z)",
         re.IGNORECASE
-    )
-     match = pattern.search(text)
-     return match.group(1).strip() if match else ""
+     )
+      match = pattern.search(text)
+      return match.group(1).strip() if match else ""
  
     def extract_experience(self, text: str) -> str:
         return self.extract_section(text, 'experience')
@@ -175,11 +175,20 @@ class ResumeScorer:
         }
          # Normalize weights to sum = 1
         total = sum(self.weights.values())
-        self.weights = {k: v / total for k, v in self.weights.items()}
+        if total !=0:
+         self.weights = {k: v / total for k, v in self.weights.items()}
 
 
     def extract_keywords_from_jd(self, jd: str) -> List[str]:
-        return re.findall(r'\b[\w\-\+\.]+\b', jd.lower())
+        tokens = re.findall(r"[a-zA-Z0-9\+#\.\-]+", jd)
+        seen = set()
+        keywords = []
+        for token in tokens:
+            tok = token.lower()
+            if tok not in seen:
+                seen.add(tok)
+                keywords.append(tok)
+        return keywords
    
     def score_resume(self, file_path: str, job_desctiption: str) -> ResumeScore:
       text = self.parser.extract_resume_text(file_path)
@@ -187,7 +196,7 @@ class ResumeScorer:
       skills = self.parser.extract_skills(clean)
       experience = self.parser.extract_experience(clean)
       education = self.parser.extract_education(clean)
-
+      jd_keywords = self.extract_keywords_from_jd(job_desctiption)
       # Prepare section dictionaries
       resume_sections = {
         'skills': ' '.join(skills),
@@ -203,16 +212,15 @@ class ResumeScorer:
       section_scores = self.semantic_matcher.calculate_section_similarity(resume_sections, jd_sections)
       semantic_score = sum(section_scores.values()) / len(section_scores) if section_scores else 0.0
 
-      keyword_results = self.keyword_matcher.calculate_keyword_match(clean, job_desctiption.split())
-      skills_score = self.keyword_matcher.calculate_skills_match(skills, job_desctiption.split())
+      keyword_results = self.keyword_matcher.calculate_keyword_match(clean, jd_keywords)
+      skills_score = self.keyword_matcher.calculate_skills_match(skills, jd_keywords)
 
       final_score = (
-        self.weights['semantic_similarity'] * semantic_score +
-        self.weights['keyword_match_score'] * keyword_results['score'] +
-        self.weights['skill_match_score'] * skills_score +
-        self.weights['experience_match_score'] * section_scores['experience'] +
-        self.weights['education_match_score'] * section_scores['education']
+     self.weights['semantic_similarity'] * semantic_score +
+     self.weights['keyword_match_score'] * keyword_results['score'] +
+     self.weights['skill_match_score'] * skills_score
     )
+
 
       return ResumeScore(
         resume_id=os.path.basename(file_path),
